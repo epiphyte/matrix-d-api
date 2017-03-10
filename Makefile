@@ -17,7 +17,7 @@ all: clean
 
 sample: clean
 	dmd $(SRC) $(SAMPLE) "samples/loginout.d" -of$(OUTPUT)/loginout
-	dmd $(SRC) $(SAMPLE) "samples/rooms.d" -of$(OUTPUT)/loginout
+	dmd $(SRC) $(SAMPLE) "samples/rooms.d" -of$(OUTPUT)/rooms
 
 test: sample
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}

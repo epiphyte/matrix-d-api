@@ -4,10 +4,12 @@
  * Matrix API
  */
 module matrix_api;
+import core.time;
 import matrix_client_errors;
 import matrix_client_helpers;
 import std.json;
 import std.net.curl;
+import std.string: format;
 import std.uri;
 
 /**
@@ -32,6 +34,19 @@ public class MatrixAPI
 
     // url to connect to for matrix
     @property public string url;
+
+    // max timeout period
+    @property public int timeout;
+
+    // last event state
+    private string since;
+
+    // init the instance
+    this ()
+    {
+        this.timeout = 30;
+        this.since = null;
+    }
 
     /**
      * Data requests
@@ -151,6 +166,11 @@ public class MatrixAPI
                 re.queryparams["access_token"] = this.token;
             }
 
+            if (this.since !is null)
+            {
+                re.queryparams["since"] = this.since;
+            }
+
             foreach (string qp; re.queryparams.keys)
             {
                 auto start = '&';
@@ -164,6 +184,7 @@ public class MatrixAPI
             }
 
             auto client = HTTP(endpoint);
+            client.operationTimeout = dur!"seconds"(this.timeout);
             client.addRequestHeader("ContentType", "application/json");
             if (re.data.length > 0 && method != HTTP.Method.get)
             {
@@ -178,7 +199,13 @@ public class MatrixAPI
             };
 
             client.perform();
-            return parseJSON(val);
+            auto json = parseJSON(val);
+            if ("next_batch" in json)
+            {
+                this.since = json["next_batch"].str;
+            }
+
+            return json;
         }
         catch (Exception e)
         {
