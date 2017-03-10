@@ -12,7 +12,7 @@ import std.string: indexOf;
  */
 public static void validateUserId(string userId)
 {
-    if (userId.length == 0)
+    if (userId is null || userId.length == 0)
     {
         throw new MatrixConfigException("user id is empty");
     }

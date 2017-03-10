@@ -1,4 +1,5 @@
 SRC=$(shell find src/ -name "*.d")
+SAMPLE=samples/common.d
 OUTPUT=bin
 NAME=matrix-d
 STYLE := $(shell command -v gstyle 2> /dev/null)
@@ -14,7 +15,11 @@ all: clean
 	dmd $(FLAGS) -c $(SRC) -of${OUTPUT}/${NAME}.so
 	rm -f $(OUTPUT)/*.o
 
-test: clean
+sample: clean
+	dmd $(SRC) $(SAMPLE) "samples/loginout.d" -of$(OUTPUT)/loginout
+	dmd $(SRC) $(SAMPLE) "samples/rooms.d" -of$(OUTPUT)/loginout
+
+test: sample
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
 	$(OUTPUT)/$(NAME)
 ifdef STYLE
