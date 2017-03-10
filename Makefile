@@ -1,6 +1,7 @@
 SRC=$(shell find src/ -name "*.d")
 OUTPUT=bin
 NAME=matrix-d
+STYLE := $(shell command -v gstyle 2> /dev/null)
 
 .PHONY: all
 
@@ -16,6 +17,9 @@ all: clean
 test: clean
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
 	$(OUTPUT)/$(NAME)
+ifdef STYLE
+	gstyle
+endif
 
 clean:
 	mkdir -p $(OUTPUT)
