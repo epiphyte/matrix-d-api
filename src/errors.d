@@ -1,9 +1,9 @@
 /**
- * Copyright 2016
+ * Copyright 2017
  * MIT License
  * Matrix Client Exceptions
  */
-module matrix_client;
+module matrix_client_errors;
 
 /**
  * Base matrix exception type
@@ -28,6 +28,28 @@ private abstract class MatrixException : Exception
 }
 
 /**
+ * Matrix setup/configuration errors
+ */
+public class MatrixConfigException : Exception
+{
+    // init the instance
+    this (string message)
+    {
+        super(message);
+    }
+}
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto req = new MatrixConfigException("test");
+        assert("test" == req.msg);
+    }
+}
+
+/**
  * Responses when getting data from matrix
  */
 public class MatrixResponseException : MatrixException
@@ -39,11 +61,11 @@ public class MatrixResponseException : MatrixException
     }
 }
 
-version (MatrixUnitTest)
+///
+version(MatrixUnitTest)
 {
     unittest
     {
-        import std.stdio;
         auto req = new MatrixResponseException("test");
         assert("" == req.content);
         assert("test" == req.msg);
@@ -75,11 +97,11 @@ public class MatrixRequestException : MatrixException
     }
 }
 
-version (MatrixUnitTest)
+///
+version(MatrixUnitTest)
 {
     unittest
     {
-        import std.stdio;
         auto req = new MatrixRequestException("test");
         assert(0 == req.code);
         assert("" == req.content);
