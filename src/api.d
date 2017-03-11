@@ -10,6 +10,7 @@ import matrix_client_helpers;
 import std.algorithm: canFind, remove;
 import std.json;
 import std.net.curl;
+import std.regex: regex, replaceFirst;
 import std.string: format;
 import std.uri;
 import std.uuid;
@@ -370,6 +371,43 @@ public class MatrixAPI
     {
         this.sync();
         return this.state.rooms.keys;
+    }
+
+    /**
+     * Send plain text
+     */
+    public void sendText(string roomId, string text)
+    {
+        auto req = DataRequest();
+        req.data["msgtype"] = "m.text";
+        req.data["body"] = text;
+        this.sendMessage(roomId, req);
+    }
+
+    /**
+     * Send a message
+     */
+    private void sendMessage(string roomId, DataRequest req)
+    {
+        // TODO: validate room id
+        this.checkAuthorized();
+        auto endpoint = format("rooms/%s/send/%s",
+                               roomId,
+                               "m.room.message");
+        this.request(HTTP.Method.put, endpoint, &req);
+    }
+
+    /**
+     * Send HTML
+     */
+    public void sendHTML(string roomId, string html)
+    {
+        auto req = DataRequest();
+        req.data["msgtype"] = "m.text";
+        req.data["body"] = replaceFirst(html, regex("<[^<]+?>"), "");
+        req.data["format"] = "org.matrix.custom.html";
+        req.data["formatted_body"] = html;
+        this.sendMessage(roomId, req);
     }
 
     /**
