@@ -439,6 +439,46 @@ version(MatrixUnitTest)
         this.state.listeners = [];
     }
 
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        static void all(MatrixAPI api, JSONValue value)
+        {
+            import std.stdio;
+            writeln("all called");
+        }
+
+        static void room(MatrixAPI api, string room, JSONValue value)
+        {
+            import std.stdio;
+            writeln("room called");
+        }
+
+        int idx = 0;
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.roomListener(new AllRoomListener(&all));
+        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost", &room));
+        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost", &room));
+        api.roomListener(new RoomListener("!blah:localhost", &room));
+        api.poll();
+        api.poll();
+        api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.roomListener(new AllRoomListener(&all));
+        api.clearRoomListeners();
+        api.login();
+        api.poll();
+        api.poll();
+    }
+}
+
+
     /**
      * Add an invite listener
      */

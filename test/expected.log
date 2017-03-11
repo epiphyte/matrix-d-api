@@ -26,6 +26,26 @@ test/_matrix/client/r0/sync?access_token=success
 test/_matrix/client/r0/sync?access_token=success&since=s9_3_0_1_1_1
 test/_matrix/client/r0/login
 {"password":"","type":"m.login.password","user":"@user:test"}
+test/_matrix/client/r0/sync?access_token=success
+all called
+room called
+room called
+all called
+room called
+room called
+test/_matrix/client/r0/sync?access_token=success&since=s9_3_0_1_1_1
+all called
+room called
+room called
+all called
+room called
+room called
+test/_matrix/client/r0/login
+{"password":"","type":"m.login.password","user":"@user:test"}
+test/_matrix/client/r0/sync?access_token=success
+test/_matrix/client/r0/sync?access_token=success&since=s9_3_0_1_1_1
+test/_matrix/client/r0/login
+{"password":"","type":"m.login.password","user":"@user:test"}
 test/_matrix/client/r0/join/!room:test?access_token=success
 {}
 test/_matrix/client/r0/login

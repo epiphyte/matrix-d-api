@@ -30,7 +30,7 @@ test: unittest sample style
 unittest:
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
 	$(OUTPUT)/$(NAME) > $(OUTPUT)/test.log
-	diff $(OUTPUT)/test.log test/expected.log
+	diff -u $(OUTPUT)/test.log test/expected.log
 
 style:
 ifdef STYLE
