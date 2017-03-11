@@ -362,6 +362,36 @@ version(MatrixUnitTest)
         this.state.invites = [];
     }
 
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        static void testing(MatrixAPI api, string room, JSONValue value)
+        {
+            import std.stdio;
+            writeln("invite called");
+        }
+
+        int idx = 0;
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.inviteListener(new InviteListener(&testing));
+        api.poll();
+        api.poll();
+        api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.inviteListener(new InviteListener(&testing));
+        api.clearInviteListeners();
+        api.login();
+        api.poll();
+        api.poll();
+    }
+}
+
     /**
      * Clear leave room listeners
      */
@@ -369,6 +399,37 @@ version(MatrixUnitTest)
     {
         this.state.leaves = [];
     }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        static void testing(MatrixAPI api, string room, JSONValue value)
+        {
+            import std.stdio;
+            writeln("left called");
+        }
+
+        int idx = 0;
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.leftListener(new LeftListener(&testing));
+        api.poll();
+        api.poll();
+        api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.leftListener(new LeftListener(&testing));
+        api.clearLeftListeners();
+        api.login();
+        api.poll();
+        api.poll();
+    }
+}
+
 
     /**
      * Clear all and room-based listeners
