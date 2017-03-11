@@ -12,15 +12,179 @@ import std.json;
 import std.net.curl;
 import std.string: format;
 import std.uri;
+import std.uuid;
 
-// Generali room listener
-alias void function() Listener;
+/**
+ * Base room listener
+ */
+public abstract class BaseRoomListener
+{
+    /**
+     * Unique identifier for the room listener
+     */
+    @property public string id()
+    {
+        if (this.uuid == null)
+        {
+            this.uuid = randomUUID().toString();
+        }
 
-// Left/leave room listener
-alias void function() LeftListener;
+        return this.uuid;
+    }
 
-// Invite listener
-alias void function() InviteListener;
+    // backing identifier
+    private string uuid = null;
+
+    /**
+     * Execute on room state events
+     */
+    public void onEvent(MatrixAPI api, string roomId, JSONValue context)
+    {
+        this.doEvent(api, roomId, context);
+    }
+
+    /**
+     * Execute event callback
+     */
+    protected void doEvent(MatrixAPI api, string roomId, JSONValue context)
+    {
+    }
+
+    /**
+     * Validate a callback is not null
+     */
+    protected void checkCall(bool callbackNull)
+    {
+        if (callbackNull)
+        {
+            throw new MatrixConfigException("event callback is null");
+        }
+    }
+}
+
+/**
+ * Do action whenever a room updates
+ */
+public class AllRoomListener : BaseRoomListener
+{
+    // all room listener
+    alias void function(MatrixAPI, JSONValue) AllRoomEvt;
+
+    // backing callback
+    @property public AllRoomEvt callback;
+
+    // inherit doc
+    protected override void doEvent(MatrixAPI api,
+                                    string roomId,
+                                    JSONValue context)
+    {
+        this.callback(api, context);
+    }
+
+    /**
+     * Init the instance
+     */
+    this (AllRoomEvt call)
+    {
+        this.callback = call;
+        this.checkCall(this.callback == null);
+    }
+}
+
+/**
+ * Do action when a room (specific room) updates
+ */
+public class RoomListener : BaseRoomListener
+{
+    // room event
+    alias void function(MatrixAPI, string, JSONValue) RoomEvt;
+
+    // room identifier
+    @property public string roomId;
+
+    // backing callback
+    @property public RoomEvt callback;
+
+    /**
+     * Init the instance
+     */
+    this (string roomId, RoomEvt call)
+    {
+        // TODO: validate
+        this.roomId = roomId;
+        this.callback = call;
+        this.checkCall(this.callback == null);
+    }
+
+    // inherit doc
+    protected override void doEvent(MatrixAPI api,
+                                    string roomId,
+                                    JSONValue context)
+    {
+        if (roomId !is null && roomId.length > 0 && this.roomId == roomId)
+        {
+            this.callback(api, roomId, context);
+        }
+    }
+}
+
+/**
+ * Listen for room invites
+ */
+public class InviteListener : BaseRoomListener
+{
+    // invited alias
+    alias void function(MatrixAPI, string, JSONValue) InvitedEvt;
+
+    // backing callback
+    @property public InvitedEvt callback;
+
+    // inherit doc
+    public override void onEvent(MatrixAPI api,
+                                 string roomId,
+                                 JSONValue context)
+    {
+        this.callback(api, roomId, context);
+    }
+
+    /**
+     * Init the instance
+     */
+    this (InvitedEvt call)
+    {
+        this.callback = call;
+        this.checkCall(this.callback == null);
+    }
+}
+
+/**
+ * Room left
+ */
+public class LeftListener : BaseRoomListener
+{
+    // Left event alias
+    alias void function(MatrixAPI, string, JSONValue) LeftEvt;
+
+    // backing callback
+    @property public LeftEvt callback;
+
+    // inherit doc
+    public override void onEvent(MatrixAPI api,
+                                 string roomId,
+                                 JSONValue context)
+    {
+        this.callback(api, roomId, context);
+    }
+
+    /**
+     * Init the instance
+     */
+    this (LeftEvt call)
+    {
+        this.callback = call;
+        this.checkCall(this.callback == null);
+    }
+}
 
 /**
  * Matrix API
@@ -32,9 +196,9 @@ public class MatrixAPI
     {
         // rooms the user is in
         string[string] rooms;
-        Listener[string] listeners;
-        InviteListener[string] invites;
-        LeftListener[string] leaves;
+        BaseRoomListener[] listeners;
+        InviteListener[] invites;
+        LeftListener[] leaves;
     }
 
     // Room JSON key
@@ -61,6 +225,7 @@ public class MatrixAPI
     // last event state
     private string since;
 
+    // last known api state
     private SyncState state;
 
     // init the instance
@@ -140,10 +305,62 @@ public class MatrixAPI
         this.request(HTTP.Method.post, "logout", null);
     }
 
+    /**
+     * Clear invite listeners
+     */
+    public void clearInviteListeners()
+    {
+        this.state.invites = [];
+    }
+
+    /**
+     * Clear leave room listeners
+     */
+    public void clearLeftListeners()
+    {
+        this.state.leaves = [];
+    }
+
+    /**
+     * Clear all and room-based listeners
+     */
+    public void clearRoomListeners()
+    {
+        this.state.listeners = [];
+    }
+
+    /**
+     * Add an invite listener
+     */
+    public void inviteListener(InviteListener invite)
+    {
+        this.state.invites ~= invite;
+    }
+
+    /**
+     * Add a room listener
+     */
+    public void roomListener(BaseRoomListener room)
+    {
+        this.state.listeners ~= room;
+    }
+
+    /**
+     * Add a room-exit listener
+     */
+    public void leftListener(LeftListener left)
+    {
+        this.state.leaves ~= left;
+    }
+
+    /**
+     * Join a room
+     */
     public void joinRoom(string roomId)
     {
         // TODO: validate room id
-        this.request(HTTP.Method.post, format("join/%s", encode(roomId)), null);
+        this.checkAuthorized();
+        this.request(HTTP.Method.post, format("join/%s", roomId), null);
     }
 
     /**
@@ -156,12 +373,26 @@ public class MatrixAPI
     }
 
     /**
+     * Poll, no-op
+     */
+    public void poll()
+    {
+        this.sync();
+    }
+
+    /**
      * Perform the sync call to matrix
      */
     private JSONValue sync()
     {
         this.checkAuthorized();
-        return this.request(HTTP.Method.get, "sync", null);
+        auto req = DataRequest();
+        if (this.since !is null)
+        {
+            req.queryparams["since"] = this.since;
+        }
+
+        return this.request(HTTP.Method.get, "sync", &req);
     }
 
     /**
@@ -196,17 +427,13 @@ public class MatrixAPI
                 re.queryparams["access_token"] = this.token;
             }
 
-            if (this.since !is null)
-            {
-                re.queryparams["since"] = this.since;
-            }
-
             foreach (string qp; re.queryparams.keys)
             {
                 auto start = '&';
                 if (first)
                 {
                     start = '?';
+                    first = false;
                 }
 
                 endpoint = endpoint ~ start ~ encode(qp);
@@ -216,10 +443,16 @@ public class MatrixAPI
             auto client = HTTP(endpoint);
             client.operationTimeout = dur!"seconds"(this.timeout);
             client.addRequestHeader("ContentType", "application/json");
-            if (re.data.length > 0 && method != HTTP.Method.get)
+            if (method != HTTP.Method.get)
             {
-                JSONValue j = JSONValue(re.data);
-                client.postData = j.toJSON();
+                string data = "{}";
+                if (re.data.length > 0)
+                {
+                    JSONValue j = JSONValue(re.data);
+                    data = j.toJSON();
+                }
+
+                client.postData = data;
             }
 
             client.onReceive = (ubyte[] data)
@@ -238,17 +471,23 @@ public class MatrixAPI
             if (RoomKey in json)
             {
                 auto rooms = json[RoomKey].object;
-                foreach (string invite; rooms["invite"].object.keys)
+                auto invites = rooms["invite"];
+                foreach (string invite; invites.object.keys)
                 {
                     foreach (InviteListener invited; state.invites)
                     {
+                        invited.onEvent(this,
+                                        invite,
+                                        invites[invite]["invite_state"]);
                     }
                 }
 
-                foreach (string leave; rooms["leave"].object.keys)
+                auto leaves = rooms["leave"];
+                foreach (string leave; leaves.object.keys)
                 {
                     foreach (LeftListener left; state.leaves)
                     {
+                        left.onEvent(this, leave, leaves[leave]);
                     }
 
                     if (leave in state.rooms)
@@ -263,16 +502,12 @@ public class MatrixAPI
                     auto obj = joined[room];
                     auto timeline = obj["timeline"];
                     state.rooms[room] = timeline["prev_batch"].str;
-                    foreach (JSONValue event; obj["state"]["events"].array)
-                    {
-                        // TODO: process state events
-                        event["roomId"] = room;
-                    }
-
                     foreach (JSONValue event; timeline["events"].array)
                     {
-                        // TODO: process events
-                        event["roomId"] = room;
+                        foreach (BaseRoomListener listen; state.listeners)
+                        {
+                            listen.onEvent(this, room, event);
+                        }
                     }
                 }
             }

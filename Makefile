@@ -15,9 +15,14 @@ all: clean
 	dmd $(FLAGS) -c $(SRC) -of${OUTPUT}/${NAME}.so
 	rm -f $(OUTPUT)/*.o
 
+define sample
+dmd $(SRC) $(SAMPLE) samples/$1.d -of$(OUTPUT)/$1
+endef
+
 sample: clean
-	dmd $(SRC) $(SAMPLE) "samples/loginout.d" -of$(OUTPUT)/loginout
-	dmd $(SRC) $(SAMPLE) "samples/rooms.d" -of$(OUTPUT)/rooms
+	$(call sample,loginout)
+	$(call sample,rooms)
+	$(call sample,readonly)
 
 test: sample
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
