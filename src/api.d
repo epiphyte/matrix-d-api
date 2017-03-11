@@ -430,7 +430,6 @@ version(MatrixUnitTest)
     }
 }
 
-
     /**
      * Clear all and room-based listeners
      */
@@ -462,8 +461,10 @@ version(MatrixUnitTest)
         api.userId = "@user:test";
         api.login();
         api.roomListener(new AllRoomListener(&all));
-        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost", &room));
-        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost", &room));
+        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost",
+                                          &room));
+        api.roomListener(new RoomListener("!asfLdzLnOdGRkdPZWu:localhost",
+                                          &room));
         api.roomListener(new RoomListener("!blah:localhost", &room));
         api.poll();
         api.poll();
@@ -477,7 +478,6 @@ version(MatrixUnitTest)
         api.poll();
     }
 }
-
 
     /**
      * Add an invite listener
