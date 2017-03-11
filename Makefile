@@ -25,9 +25,14 @@ sample: clean
 	$(call sample,rooms)
 	$(call sample,readonly)
 
-test: sample
+test: unittest sample style
+
+unittest:
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
-	$(OUTPUT)/$(NAME)
+	$(OUTPUT)/$(NAME) > $(OUTPUT)/test.log
+	diff $(OUTPUT)/test.log test/expected.log
+
+style:
 ifdef STYLE
 	gstyle
 endif

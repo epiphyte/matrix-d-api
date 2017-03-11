@@ -1,0 +1,5 @@
+{
+    "test/_matrix/client/r0/login": "login",
+    "test/_matrix/client/r0/sync?access_token=success": "syncinit",
+    "test/_matrix/client/r0/sync?access_token=success&since=s9_3_0_1_1_1": "syncsince"
+}

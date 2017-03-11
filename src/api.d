@@ -293,6 +293,41 @@ public class MatrixAPI
         }
     }
 
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        try
+        {
+            api.login();
+            assert(false);
+        }
+        catch (MatrixConfigException e)
+        {
+            assert(e.msg == "URL not configured");
+        }
+
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        assert(api.token == "success");
+        api = new MatrixAPI();
+        api.url = "test2";
+        api.userId = "@user:test";
+        try
+        {
+            api.login();
+            assert(false);
+        }
+        catch (MatrixRequestException e)
+        {
+            assert(e.msg == "unable to authorize");
+        }
+    }
+}
+
     /**
      * Logout of matrix
      */
@@ -305,6 +340,19 @@ public class MatrixAPI
 
         this.request(HTTP.Method.post, "logout", null);
     }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.logout();
+    }
+}
 
     /**
      * Clear invite listeners
@@ -364,6 +412,19 @@ public class MatrixAPI
         this.request(HTTP.Method.post, format("join/%s", roomId), null);
     }
 
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.joinRoom("!room:test");
+    }
+}
+
     /**
      * Get rooms the user has joined
      */
@@ -372,6 +433,19 @@ public class MatrixAPI
         this.sync();
         return this.state.rooms.keys;
     }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        assert(api.getRooms().length == 1);
+    }
+}
 
     /**
      * Send plain text
@@ -383,6 +457,19 @@ public class MatrixAPI
         req.data["body"] = text;
         this.sendMessage(roomId, req);
     }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.sendText("!room:test", "blah");
+    }
+}
 
     /**
      * Send a message
@@ -410,6 +497,19 @@ public class MatrixAPI
         this.sendMessage(roomId, req);
     }
 
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.sendHTML("!room:test", "<html>blah</html>");
+    }
+}
+
     /**
      * Poll, no-op
      */
@@ -417,6 +517,20 @@ public class MatrixAPI
     {
         this.sync();
     }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.poll();
+        api.poll();
+    }
+}
 
     /**
      * Perform the sync call to matrix
@@ -478,9 +592,33 @@ public class MatrixAPI
                 endpoint = endpoint ~ "=" ~ encode(re.queryparams[qp]);
             }
 
-            auto client = HTTP(endpoint);
-            client.operationTimeout = dur!"seconds"(this.timeout);
-            client.addRequestHeader("ContentType", "application/json");
+            bool curl = true;
+            version(MatrixUnitTest)
+            {
+                curl = false;
+                import std.file: readText;
+                import std.stdio;
+                writeln(endpoint);
+                auto text = readText("test/harness.json");
+                auto test = parseJSON(text);
+                if (endpoint in test)
+                {
+                    val = readText("test/" ~ test[endpoint].str ~ ".json");
+                }
+                else
+                {
+                    val = "{}";
+                }
+            }
+
+            HTTP client = null;
+            if (curl)
+            {
+                client = HTTP(endpoint);
+                client.operationTimeout = dur!"seconds"(this.timeout);
+                client.addRequestHeader("ContentType", "application/json");
+            }
+
             if (method != HTTP.Method.get)
             {
                 string data = "{}";
@@ -490,16 +628,29 @@ public class MatrixAPI
                     data = j.toJSON();
                 }
 
-                client.postData = data;
+                version(MatrixUnitTest)
+                {
+                    import std.stdio;
+                    writeln(data);
+                }
+
+                if (curl)
+                {
+                    client.postData = data;
+                }
             }
 
-            client.onReceive = (ubyte[] data)
+            if (curl)
             {
-                val = val ~ cast(string)data;
-                return data.length;
-            };
+                client.onReceive = (ubyte[] data)
+                {
+                    val = val ~ cast(string)data;
+                    return data.length;
+                };
 
-            client.perform();
+                client.perform();
+            }
+
             auto json = parseJSON(val);
             if ("next_batch" in json)
             {
