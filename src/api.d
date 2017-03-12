@@ -111,7 +111,7 @@ public class RoomListener : BaseRoomListener
      */
     this (string roomId, RoomEvt call)
     {
-        // TODO: validate
+        validateRoomId(roomId);
         this.roomId = roomId;
         this.callback = call;
         this.checkCall(this.callback == null);
@@ -508,7 +508,7 @@ version(MatrixUnitTest)
      */
     public void joinRoom(string roomId)
     {
-        // TODO: validate room id
+        validateRoomId(roomId);
         this.checkAuthorized();
         this.request(HTTP.Method.post, format("join/%s", roomId), null);
     }
@@ -577,7 +577,7 @@ version(MatrixUnitTest)
      */
     private void sendMessage(string roomId, DataRequest req)
     {
-        // TODO: validate room id
+        validateRoomId(roomId);
         this.checkAuthorized();
         auto endpoint = format("rooms/%s/send/%s",
                                roomId,
