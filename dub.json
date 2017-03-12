@@ -1,0 +1,9 @@
+{
+	"name": "matrix-d-api",
+	"description": "An implementation of the matrix API for D.",
+	"authors": ["Sean Enck"],
+	"homepage": "https://github.com/epiphyte/matrix-d-api",
+	"license": "MIT",
+	"dependencies": {
+	}
+}
