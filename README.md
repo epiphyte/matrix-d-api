@@ -16,3 +16,6 @@ build and test the full system and create samples
 make test
 ```
 
+# usage
+
+the `samples` directory contains a small set of examples that can be used to get started
