@@ -261,6 +261,9 @@ public class MatrixAPI
     // last event state
     private string since;
 
+    // additional context store
+    @property public string[string] context;
+
     // last known api state
     private SyncState state;
 
