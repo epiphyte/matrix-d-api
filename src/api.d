@@ -16,6 +16,35 @@ import std.uri;
 import std.uuid;
 
 /**
+ * Base listener
+ */
+public interface IBaseListener
+{
+    void onEvent(MatrixAPI api, string roomId, JSONValue context);
+}
+
+/**
+ * Listen for room events
+ */
+public interface IRoomListener : IBaseListener
+{
+}
+
+/**
+ * Listen for invite events
+ */
+public interface IInviteListener : IBaseListener
+{
+}
+
+/**
+ * Listen for left/leave events
+ */
+public interface ILeftListener : IBaseListener
+{
+}
+
+/**
  * Base room listener
  */
 public abstract class BaseRoomListener
@@ -37,6 +66,23 @@ public abstract class BaseRoomListener
     private string uuid = null;
 
     /**
+     * Validate a callback is not null
+     */
+    protected void checkCall(bool callbackNull)
+    {
+        if (callbackNull)
+        {
+            throw new MatrixConfigException("event callback is null");
+        }
+    }
+}
+
+/**
+ * Room event listener (base/common definition)
+ */
+public abstract class CommonRoomListener : BaseRoomListener, IRoomListener
+{
+    /**
      * Execute on room state events
      */
     public void onEvent(MatrixAPI api, string roomId, JSONValue context)
@@ -50,23 +96,12 @@ public abstract class BaseRoomListener
     protected void doEvent(MatrixAPI api, string roomId, JSONValue context)
     {
     }
-
-    /**
-     * Validate a callback is not null
-     */
-    protected void checkCall(bool callbackNull)
-    {
-        if (callbackNull)
-        {
-            throw new MatrixConfigException("event callback is null");
-        }
-    }
 }
 
 /**
  * Do action whenever a room updates
  */
-public class AllRoomListener : BaseRoomListener
+public class AllRoomListener : CommonRoomListener
 {
     // all room listener
     alias void function(MatrixAPI, JSONValue) AllRoomEvt;
@@ -95,7 +130,7 @@ public class AllRoomListener : BaseRoomListener
 /**
  * Do action when a room (specific room) updates
  */
-public class RoomListener : BaseRoomListener
+public class RoomListener : CommonRoomListener
 {
     // room event
     alias void function(MatrixAPI, string, JSONValue) RoomEvt;
@@ -132,7 +167,7 @@ public class RoomListener : BaseRoomListener
 /**
  * Listen for room invites
  */
-public class InviteListener : BaseRoomListener
+public class InviteListener : BaseRoomListener, IInviteListener
 {
     // invited alias
     alias void function(MatrixAPI, string, JSONValue) InvitedEvt;
@@ -161,7 +196,7 @@ public class InviteListener : BaseRoomListener
 /**
  * Room left
  */
-public class LeftListener : BaseRoomListener
+public class LeftListener : BaseRoomListener, ILeftListener
 {
     // Left event alias
     alias void function(MatrixAPI, string, JSONValue) LeftEvt;
@@ -197,9 +232,9 @@ public class MatrixAPI
     {
         // rooms the user is in
         string[string] rooms;
-        BaseRoomListener[] listeners;
-        InviteListener[] invites;
-        LeftListener[] leaves;
+        IRoomListener[] listeners;
+        IInviteListener[] invites;
+        ILeftListener[] leaves;
     }
 
     // Room JSON key
@@ -482,7 +517,7 @@ version(MatrixUnitTest)
     /**
      * Add an invite listener
      */
-    public void inviteListener(InviteListener invite)
+    public void inviteListener(IInviteListener invite)
     {
         this.state.invites ~= invite;
     }
@@ -490,7 +525,7 @@ version(MatrixUnitTest)
     /**
      * Add a room listener
      */
-    public void roomListener(BaseRoomListener room)
+    public void roomListener(IRoomListener room)
     {
         this.state.listeners ~= room;
     }
@@ -498,7 +533,7 @@ version(MatrixUnitTest)
     /**
      * Add a room-exit listener
      */
-    public void leftListener(LeftListener left)
+    public void leftListener(ILeftListener left)
     {
         this.state.leaves ~= left;
     }
@@ -764,7 +799,7 @@ version(MatrixUnitTest)
                 auto invites = rooms["invite"];
                 foreach (string invite; invites.object.keys)
                 {
-                    foreach (InviteListener invited; state.invites)
+                    foreach (IInviteListener invited; state.invites)
                     {
                         invited.onEvent(this,
                                         invite,
@@ -775,7 +810,7 @@ version(MatrixUnitTest)
                 auto leaves = rooms["leave"];
                 foreach (string leave; leaves.object.keys)
                 {
-                    foreach (LeftListener left; state.leaves)
+                    foreach (ILeftListener left; state.leaves)
                     {
                         left.onEvent(this, leave, leaves[leave]);
                     }
@@ -794,7 +829,7 @@ version(MatrixUnitTest)
                     state.rooms[room] = timeline["prev_batch"].str;
                     foreach (JSONValue event; timeline["events"].array)
                     {
-                        foreach (BaseRoomListener listen; state.listeners)
+                        foreach (IRoomListener listen; state.listeners)
                         {
                             listen.onEvent(this, room, event);
                         }
