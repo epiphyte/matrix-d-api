@@ -4,8 +4,8 @@
  * Read-only client
  */
 import core.thread;
-import matrix_api;
-import matrix_sample_common;
+import matrix.api;
+import samples.common;
 import std.json;
 
 // user invited

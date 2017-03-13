@@ -3,8 +3,8 @@
  * MIT License
  * Helper functions for client/api operations
  */
-module matrix_client_helpers;
-import matrix_client_errors;
+module matrix.helpers;
+import matrix.errors;
 import std.string: indexOf;
 
 /**

@@ -3,7 +3,7 @@
  * MIT License
  * List rooms example
  */
-import matrix_sample_common;
+import samples.common;
 import std.stdio;
 
 // main entry

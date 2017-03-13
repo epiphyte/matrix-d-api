@@ -3,7 +3,7 @@
  * MIT License
  * Matrix Client Exceptions
  */
-module matrix_client_errors;
+module matrix.errors;
 
 /**
  * Base matrix exception type

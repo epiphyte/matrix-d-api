@@ -3,7 +3,7 @@
  * MIT License
  * Login and logout (get token)
  */
-import matrix_sample_common;
+import samples.common;
 import std.stdio;
 
 // main entry

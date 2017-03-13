@@ -3,8 +3,8 @@
  * MIT License
  * Common sample operations
  */
-module matrix_sample_common;
-import matrix_api;
+module samples.common;
+import matrix.api;
 import std.getopt;
 
 /**

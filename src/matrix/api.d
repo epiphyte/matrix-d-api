@@ -3,10 +3,10 @@
  * MIT License
  * Matrix API
  */
-module matrix_api;
+module matrix.api;
 import core.time;
-import matrix_client_errors;
-import matrix_client_helpers;
+import matrix.errors;
+import matrix.helpers;
 import std.algorithm: canFind, remove;
 import std.json;
 import std.net.curl;
