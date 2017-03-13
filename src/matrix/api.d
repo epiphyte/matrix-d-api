@@ -12,7 +12,6 @@ import std.json;
 import std.net.curl;
 import std.regex: regex, replaceFirst;
 import std.string: format;
-import std.uri;
 import std.uuid;
 
 /**
@@ -727,8 +726,8 @@ version(MatrixUnitTest)
                     first = false;
                 }
 
-                endpoint = endpoint ~ start ~ encode(qp);
-                endpoint = endpoint ~ "=" ~ encode(re.queryparams[qp]);
+                endpoint = endpoint ~ start ~ qp;
+                endpoint = endpoint ~ "=" ~ re.queryparams[qp];
             }
 
             bool curl = true;

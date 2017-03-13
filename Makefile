@@ -24,6 +24,7 @@ sample: clean
 	$(call sample,loginout)
 	$(call sample,rooms)
 	$(call sample,readonly)
+	$(call sample,gentoken)
 
 test: unittest sample style
 
