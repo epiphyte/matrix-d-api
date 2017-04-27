@@ -20,6 +20,7 @@ dmd $(SRC) $(SAMPLE) samples/$1.d -of$(OUTPUT)/$1
 endef
 
 sample: clean
+	$(call sample,public)
 	$(call sample,chat)
 	$(call sample,loginout)
 	$(call sample,rooms)

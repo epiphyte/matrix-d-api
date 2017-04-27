@@ -1,0 +1,27 @@
+{
+    "total_room_count_estimate":2,
+    "next_batch":"abcdefghi",
+    "chunk":
+    [
+        {
+            "name":"xyz",
+            "world_readable":false,
+            "topic":"something something",
+            "num_joined_members":20,
+            "avatar_url":"mxc:\/\/domain.url\/xyz",
+            "room_id":"!xyz:domain.url",
+            "guest_can_join":false,
+            "aliases":["#xyz:domain"]
+        },
+        {
+            "canonical_alias":"#abc:domain.url",
+            "name":"abc",
+            "world_readable":false,
+            "topic":"something something",
+            "num_joined_members":20,
+            "avatar_url":"mxc:\/\/domain.url\/abc",
+            "room_id":"!abc:domain.url",
+            "guest_can_join":false,
+            "aliases":["#abc:domain", "#other:domain", "!abc:domain.url"]
+        }
+]}

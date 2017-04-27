@@ -239,6 +239,9 @@ public class MatrixAPI
     // Room JSON key
     private enum RoomKey = "rooms";
 
+    // Public room chunk key
+    private enum ChunkKey = "chunk";
+
     // authorization has happened
     private bool authorized = false;
 
@@ -586,6 +589,83 @@ version(MatrixUnitTest)
 }
 
     /**
+     * Extract room info from a room definition
+     */
+    private static string[] extractRoomInfo(string key,
+                                            JSONValue obj,
+                                            bool array)
+    {
+        string[] result;
+        if (key in obj)
+        {
+            if (array)
+            {
+                foreach (sub; obj[key].array)
+                {
+                    result ~= sub.str;
+                }
+            }
+            else
+            {
+                result ~= obj[key].str;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Get public rooms (room_id -> [aliases])
+     */
+    public string[][string] getPublicRooms()
+    {
+        auto obj = this.request(HTTP.Method.get, "publicRooms", null, true);
+        string[][string] result;
+        if (ChunkKey in obj)
+        {
+            auto rooms = obj[ChunkKey].array;
+            foreach (room; rooms)
+            {
+                auto ids = extractRoomInfo("room_id", room, false);
+                if (ids.length > 0)
+                {
+                    string id = ids[0];
+                    string[] aliases;
+                    aliases ~= id;
+                    foreach (aliased; extractRoomInfo("canonical_alias",
+                                                      room,
+                                                      false) ~
+                                      extractRoomInfo("aliases", room, true))
+                    {
+                        if (!aliases.canFind(aliased))
+                        {
+                            aliases ~= aliased;
+                        }
+                    }
+
+                    result[id] = aliases;
+                }
+            }
+        }
+
+        return result;
+    }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        auto result = api.getPublicRooms();
+        assert(result.length == 2);
+        assert(result["!abc:domain.url"].length == 4);
+        assert(result["!xyz:domain.url"].length == 2);
+    }
+}
+
+    /**
      * Send plain text
      */
     public void sendText(string roomId, string text)
@@ -699,7 +779,10 @@ version(MatrixUnitTest)
     /**
      * Make a request
      */
-    private JSONValue request(HTTP.Method method, string call, DataRequest* req)
+    private JSONValue request(HTTP.Method method,
+                              string call,
+                              DataRequest* req,
+                              bool noPostProcessing = false)
     {
         string val = "";
         try
@@ -790,50 +873,53 @@ version(MatrixUnitTest)
             }
 
             auto json = parseJSON(val);
-            if ("next_batch" in json)
+            if (!noPostProcessing)
             {
-                this.since = json["next_batch"].str;
-            }
-
-            if (RoomKey in json)
-            {
-                auto rooms = json[RoomKey].object;
-                auto invites = rooms["invite"];
-                foreach (string invite; invites.object.keys)
+                if ("next_batch" in json)
                 {
-                    foreach (IInviteListener invited; state.invites)
-                    {
-                        invited.onEvent(this,
-                                        invite,
-                                        invites[invite]["invite_state"]);
-                    }
+                    this.since = json["next_batch"].str;
                 }
 
-                auto leaves = rooms["leave"];
-                foreach (string leave; leaves.object.keys)
+                if (RoomKey in json)
                 {
-                    foreach (ILeftListener left; state.leaves)
+                    auto rooms = json[RoomKey].object;
+                    auto invites = rooms["invite"];
+                    foreach (string invite; invites.object.keys)
                     {
-                        left.onEvent(this, leave, leaves[leave]);
-                    }
-
-                    if (leave in state.rooms)
-                    {
-                        state.rooms.remove(leave);
-                    }
-                }
-
-                auto joined = rooms["join"];
-                foreach (string room; joined.object.keys)
-                {
-                    auto obj = joined[room];
-                    auto timeline = obj["timeline"];
-                    state.rooms[room] = timeline["prev_batch"].str;
-                    foreach (JSONValue event; timeline["events"].array)
-                    {
-                        foreach (IRoomListener listen; state.listeners)
+                        foreach (IInviteListener invited; state.invites)
                         {
-                            listen.onEvent(this, room, event);
+                            invited.onEvent(this,
+                                            invite,
+                                            invites[invite]["invite_state"]);
+                        }
+                    }
+
+                    auto leaves = rooms["leave"];
+                    foreach (string leave; leaves.object.keys)
+                    {
+                        foreach (ILeftListener left; state.leaves)
+                        {
+                            left.onEvent(this, leave, leaves[leave]);
+                        }
+
+                        if (leave in state.rooms)
+                        {
+                            state.rooms.remove(leave);
+                        }
+                    }
+
+                    auto joined = rooms["join"];
+                    foreach (string room; joined.object.keys)
+                    {
+                        auto obj = joined[room];
+                        auto timeline = obj["timeline"];
+                        state.rooms[room] = timeline["prev_batch"].str;
+                        foreach (JSONValue event; timeline["events"].array)
+                        {
+                            foreach (IRoomListener listen; state.listeners)
+                            {
+                                listen.onEvent(this, room, event);
+                            }
                         }
                     }
                 }

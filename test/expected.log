@@ -51,6 +51,7 @@ test/_matrix/client/r0/join/!room:test?access_token=success
 test/_matrix/client/r0/login
 {"password":"","type":"m.login.password","user":"@user:test"}
 test/_matrix/client/r0/sync?access_token=success
+test/_matrix/client/r0/publicRooms
 test/_matrix/client/r0/login
 {"password":"","type":"m.login.password","user":"@user:test"}
 test/_matrix/client/r0/rooms/!room:test/send/m.room.message?access_token=success
