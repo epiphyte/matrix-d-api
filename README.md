@@ -20,4 +20,5 @@ make test
 
 the `samples` directory contains a small set of examples that can be used to get started
 
-visit the [dub](https://code.dlang.org/packages/matrix-d-api) registry for inclusion (or download and use the source)
+
+[![dub](https://img.shields.io/dub/v/matrix-d-api.svg)](https://code.dlang.org/my_packages/matrix-d-api)
