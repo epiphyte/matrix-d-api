@@ -15,6 +15,30 @@ import std.string: format, toLower;
 import std.uuid;
 
 /**
+ * Response body keys
+ */
+public static class ResponseKeys
+{
+    // body text of json
+    public enum Body = "body";
+
+    // response is text
+    public enum TextType = "m.text";
+
+    // msg type (e.g. text)
+    public enum MessageType = "msgtype";
+
+    // format of response
+    public enum Format = "format";
+
+    // custom formatted body
+    public enum FormattedBody = "formatted_body";
+
+    // custom formatting of html
+    public enum MatrixCustomHTML = "org.matrix.custom.html";
+}
+
+/**
  * Base listener
  */
 public interface IBaseListener
@@ -671,8 +695,8 @@ version(MatrixUnitTest)
     public void sendText(string roomId, string text)
     {
         auto req = DataRequest();
-        req.data["msgtype"] = "m.text";
-        req.data["body"] = text;
+        req.data[ResponseKeys.MessageType] = ResponseKeys.TextType;
+        req.data[ResponseKeys.Body] = text;
         this.sendMessage(roomId, req);
     }
 
@@ -708,10 +732,12 @@ version(MatrixUnitTest)
     public void sendHTML(string roomId, string html)
     {
         auto req = DataRequest();
-        req.data["msgtype"] = "m.text";
-        req.data["body"] = replaceFirst(html, regex("<[^<]+?>"), "");
-        req.data["format"] = "org.matrix.custom.html";
-        req.data["formatted_body"] = html;
+        req.data[ResponseKeys.MessageType] = ResponseKeys.TextType;
+        req.data[ResponseKeys.Body] = replaceFirst(html,
+                                                   regex("<[^<]+?>"),
+                                                   "");
+        req.data[ResponseKeys.Format] = ResponseKeys.MatrixCustomHTML;
+        req.data[ResponseKeys.FormattedBody] = html;
         this.sendMessage(roomId, req);
     }
 
@@ -866,15 +892,18 @@ version(MatrixUnitTest)
                 bool isJSON = false;
                 client.onReceiveHeader = (in char[] key, in char[] value)
                 {
-                    if (key.length > 0 && value.length > 0)
+                    if (key.length == 0 || value.length== 0)
                     {
-                        if ((cast(string)key).toLower() == "content-type" &&
-                            (cast(string)value).toLower() == "application/json")
-                        {
-                            isJSON = true;
-                        }
+                        return;
+                    }
+
+                    if ((cast(string)key).toLower() == "content-type" &&
+                        (cast(string)value).toLower() == "application/json")
+                    {
+                        isJSON = true;
                     }
                 };
+
                 client.onReceive = (ubyte[] data)
                 {
                     val = val ~ cast(string)data;
@@ -884,7 +913,7 @@ version(MatrixUnitTest)
                 client.perform();
                 if (!isJSON)
                 {
-                    throw new MatrixResponseException("unable to detect valid JSON");
+                    throw new MatrixResponseException("No JSON response");
                 }
             }
 
