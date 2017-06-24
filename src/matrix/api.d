@@ -130,7 +130,7 @@ public class AllRoomListener : CommonRoomListener
     alias void function(MatrixAPI, JSONValue) AllRoomEvt;
 
     // backing callback
-    @property public AllRoomEvt callback;
+    private void delegate(MatrixAPI, JSONValue) callback;
 
     // inherit doc
     protected override void doEvent(MatrixAPI api,
@@ -141,9 +141,22 @@ public class AllRoomListener : CommonRoomListener
     }
 
     /**
-     * Init the instance
+     * Init the instance using a function
      */
     this (AllRoomEvt call)
+    {
+        auto wrap = delegate(MatrixAPI api, JSONValue context)
+        {
+            call(api, context);
+        };
+
+        this(wrap);
+    }
+
+    /**
+     * Init using a delegate
+     */
+    this(void delegate(MatrixAPI, JSONValue) call)
     {
         this.callback = call;
         this.checkCall(this.callback == null);
@@ -162,12 +175,25 @@ public class RoomListener : CommonRoomListener
     @property public string roomId;
 
     // backing callback
-    @property public RoomEvt callback;
+    private void delegate(MatrixAPI, string, JSONValue) callback;
 
     /**
-     * Init the instance
+     * Init the instance using a function
      */
     this (string roomId, RoomEvt call)
+    {
+        auto wrap = delegate(MatrixAPI api, string room, JSONValue context)
+        {
+            call(api, room, context);
+        };
+
+        this(roomId, wrap);
+    }
+
+    /**
+     * Init the instance using a delegate
+     */
+    this (string roomId, void delegate(MatrixAPI, string, JSONValue) call)
     {
         validateRoomId(roomId);
         this.roomId = roomId;
@@ -196,7 +222,7 @@ public class InviteListener : BaseRoomListener, IInviteListener
     alias void function(MatrixAPI, string, JSONValue) InvitedEvt;
 
     // backing callback
-    @property public InvitedEvt callback;
+    private void delegate(MatrixAPI, string, JSONValue) callback;
 
     // inherit doc
     public override void onEvent(MatrixAPI api,
@@ -207,9 +233,22 @@ public class InviteListener : BaseRoomListener, IInviteListener
     }
 
     /**
-     * Init the instance
+     * Init the instance using a function
      */
     this (InvitedEvt call)
+    {
+        auto wrap = delegate(MatrixAPI api, string room, JSONValue context)
+        {
+            call(api, room, context);
+        };
+
+        this(wrap);
+    }
+
+    /**
+     * Init the instance using a function
+     */
+    this (void delegate(MatrixAPI, string, JSONValue) call)
     {
         this.callback = call;
         this.checkCall(this.callback == null);
@@ -225,7 +264,7 @@ public class LeftListener : BaseRoomListener, ILeftListener
     alias void function(MatrixAPI, string, JSONValue) LeftEvt;
 
     // backing callback
-    @property public LeftEvt callback;
+    private void delegate(MatrixAPI, string, JSONValue) callback;
 
     // inherit doc
     public override void onEvent(MatrixAPI api,
@@ -236,9 +275,22 @@ public class LeftListener : BaseRoomListener, ILeftListener
     }
 
     /**
-     * Init the instance
+     * Init the instance using a function
      */
     this (LeftEvt call)
+    {
+        auto wrap = delegate(MatrixAPI api, string room, JSONValue context)
+        {
+            call(api, room, context);
+        };
+
+        this(wrap);
+    }
+
+    /**
+     * Init the instance using a delegate
+     */
+    this (void delegate(MatrixAPI, string, JSONValue) call)
     {
         this.callback = call;
         this.checkCall(this.callback == null);
