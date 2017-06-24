@@ -21,4 +21,4 @@ make test
 the `samples` directory contains a small set of examples that can be used to get started
 
 
-[![dub](https://img.shields.io/dub/v/matrix-d-api.svg)](https://code.dlang.org/my_packages/matrix-d-api)
+[![dub](https://img.shields.io/dub/v/matrix-d-api.svg)](https://code.dlang.org/packages/matrix-d-api)
