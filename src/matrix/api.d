@@ -11,7 +11,7 @@ import std.algorithm: canFind, remove;
 import std.json;
 import std.net.curl;
 import std.regex: regex, replaceFirst;
-import std.string: format;
+import std.string: format, toLower;
 import std.uuid;
 
 /**
@@ -863,6 +863,18 @@ version(MatrixUnitTest)
 
             if (curl)
             {
+                bool isJSON = false;
+                client.onReceiveHeader = (in char[] key, in char[] value)
+                {
+                    if (key.length > 0 && value.length > 0)
+                    {
+                        if ((cast(string)key).toLower() == "content-type" &&
+                            (cast(string)value).toLower() == "application/json")
+                        {
+                            isJSON = true;
+                        }
+                    }
+                };
                 client.onReceive = (ubyte[] data)
                 {
                     val = val ~ cast(string)data;
@@ -870,6 +882,10 @@ version(MatrixUnitTest)
                 };
 
                 client.perform();
+                if (!isJSON)
+                {
+                    throw new MatrixResponseException("unable to detect valid JSON");
+                }
             }
 
             auto json = parseJSON(val);
