@@ -342,7 +342,7 @@ public class MatrixAPI
     // additional context store
     @property public string[string] context;
 
-    // response handler for invalid response 
+    // response handler for invalid response
     @property public void delegate(string) invalidResponse;
 
     // last known api state
