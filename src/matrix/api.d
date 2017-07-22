@@ -623,13 +623,42 @@ version(MatrixUnitTest)
     }
 
     /**
+     * Room action
+     */
+    private void roomAction(string roomId, string action)
+    {
+        validateRoomId(roomId);
+        this.checkAuthorized();
+        this.request(HTTP.Method.post, format(action, roomId), null);
+    }
+
+    /**
+     * leave a room
+     */
+    public void leaveRoom(string roomId)
+    {
+        this.roomAction(roomId, "rooms/%s/leave");
+    }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.leaveRoom("!room:test");
+    }
+}
+
+    /**
      * Join a room
      */
     public void joinRoom(string roomId)
     {
-        validateRoomId(roomId);
-        this.checkAuthorized();
-        this.request(HTTP.Method.post, format("join/%s", roomId), null);
+        this.roomAction(roomId, "join/%s");
     }
 
 ///
