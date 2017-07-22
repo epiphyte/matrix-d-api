@@ -342,6 +342,9 @@ public class MatrixAPI
     // additional context store
     @property public string[string] context;
 
+    // response handler for invalid response 
+    @property public void delegate(string) invalidResponse;
+
     // last known api state
     private SyncState state;
 
@@ -965,6 +968,12 @@ version(MatrixUnitTest)
                 client.perform();
                 if (!isJSON)
                 {
+                    if (this.invalidResponse !is null)
+                    {
+                        // allow listeners to know about this
+                        this.invalidResponse(val);
+                    }
+
                     throw new MatrixResponseException("No JSON response");
                 }
             }
