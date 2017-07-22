@@ -39,6 +39,15 @@ public static class ResponseKeys
 }
 
 /**
+ * Error handling
+ */
+public enum Reason
+{
+    // Reason codes
+    Content, General
+}
+
+/**
  * Base listener
  */
 public interface IBaseListener
@@ -342,8 +351,8 @@ public class MatrixAPI
     // additional context store
     @property public string[string] context;
 
-    // response handler for invalid response
-    @property public void delegate(string) invalidResponse;
+    // response handler for API errors
+    @property public JSONValue delegate(Reason, string) apiError;
 
     // last known api state
     private SyncState state;
@@ -997,13 +1006,14 @@ version(MatrixUnitTest)
                 client.perform();
                 if (!isJSON)
                 {
-                    if (this.invalidResponse !is null)
+                    if (this.apiError is null)
                     {
-                        // allow listeners to know about this
-                        this.invalidResponse(val);
+                        throw new MatrixResponseException("No JSON response");
                     }
-
-                    throw new MatrixResponseException("No JSON response");
+                    else
+                    {
+                        return this.apiError(Reason.Content, val);
+                    }
                 }
             }
 
@@ -1064,7 +1074,14 @@ version(MatrixUnitTest)
         }
         catch (Exception e)
         {
-            throw new MatrixResponseException(e.msg, val);
+            if (this.apiError is null)
+            {
+                throw new MatrixResponseException(e.msg, val);
+            }
+            else
+            {
+                return this.apiError(Reason.General, val);
+            }
         }
     }
 }
