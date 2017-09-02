@@ -2,7 +2,6 @@ SRC=$(shell find src/ -name "*.d")
 SAMPLE=samples/common.d
 OUTPUT=bin
 NAME=matrix-d
-STYLE := $(shell command -v gstyle 2> /dev/null)
 
 .PHONY: all
 
@@ -27,17 +26,13 @@ sample: clean
 	$(call sample,readonly)
 	$(call sample,gentoken)
 
-test: unittest sample style
+test: unittest sample
 
 unittest:
 	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
 	$(OUTPUT)/$(NAME) > $(OUTPUT)/test.log
 	diff -u $(OUTPUT)/test.log test/expected.log
 
-style:
-ifdef STYLE
-	gstyle
-endif
 
 clean:
 	mkdir -p $(OUTPUT)
