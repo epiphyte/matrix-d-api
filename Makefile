@@ -33,7 +33,6 @@ unittest:
 	$(OUTPUT)/$(NAME) > $(OUTPUT)/test.log
 	diff -u $(OUTPUT)/test.log test/expected.log
 
-
 clean:
 	mkdir -p $(OUTPUT)
 	rm -f $(OUTPUT)/*
