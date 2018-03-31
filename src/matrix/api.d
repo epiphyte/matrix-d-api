@@ -8,6 +8,7 @@ import core.time;
 import matrix.errors;
 import matrix.helpers;
 import std.algorithm: canFind, remove;
+import std.conv: to;
 import std.json;
 import std.net.curl;
 import std.regex: regex, replaceFirst;
@@ -844,6 +845,39 @@ version(MatrixUnitTest)
         api.userId = "@user:test";
         api.login();
         api.sendHTML("!room:test", "<html>blah</html>");
+    }
+}
+    /**
+     * indicate a user is typing
+     */
+    public void typing(string roomId, int milliseconds, bool type)
+    {
+        if (milliseconds <= 0)
+        {
+            return;
+        }
+
+        validateRoomId(roomId);
+        this.checkAuthorized();
+        auto endpoint = format("rooms/%s/typing/%s", roomId, this.userId);
+        auto req = DataRequest();
+        req.data["timeout"] = to!string(milliseconds);
+        req.data["typing"] = to!string(type);
+        this.request(HTTP.Method.post, endpoint, &req);
+    }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.typing("!room:test", 100, true);
+        api.typing("!room:test", 100, false);
+        api.typing("!room:test", 0, true);
     }
 }
 
