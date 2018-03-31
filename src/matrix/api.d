@@ -848,6 +848,32 @@ version(MatrixUnitTest)
 }
 
     /**
+     * Mark an event as read
+     */
+    public void readReceipt(string eventId, string roomId)
+    {
+        validateRoomId(roomId);
+        validateEventId(eventId);
+        this.checkAuthorized();
+        auto endpoint = format("rooms/%s/receipt/%s/%s", roomId, "m.read", eventId);
+        auto req = DataRequest();
+        this.request(HTTP.Method.post, endpoint, &req);
+    }
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        auto api = new MatrixAPI();
+        api.url = "test";
+        api.userId = "@user:test";
+        api.login();
+        api.readReceipt("$test:event", "!room:test");
+    }
+}
+
+    /**
      * Poll, no-op
      */
     public void poll()

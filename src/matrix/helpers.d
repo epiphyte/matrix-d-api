@@ -82,6 +82,51 @@ version(MatrixUnitTest)
 }
 
 /**
+ * Validate an event id
+ */
+public static void validateEventId(string eventId)
+{
+    validateId(eventId, '$', "event");
+}
+
+///
+version(MatrixUnitTest)
+{
+    unittest
+    {
+        try
+        {
+            validateEventId("");
+            assert(false);
+        }
+        catch (MatrixConfigException e)
+        {
+            assert(e.msg == "event id is empty");
+        }
+
+        try
+        {
+            validateEventId("test");
+            assert(false);
+        }
+        catch (MatrixConfigException e)
+        {
+            assert(e.msg == "event id must start with '$'");
+        }
+
+        try
+        {
+            validateEventId("$test");
+            assert(false);
+        }
+        catch (MatrixConfigException e)
+        {
+            assert(e.msg == "event id must be <name>:<domain>");
+        }
+    }
+}
+
+/**
  * Validate a room id
  */
 public static void validateRoomId(string roomId)
