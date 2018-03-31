@@ -863,7 +863,7 @@ version(MatrixUnitTest)
         auto req = DataRequest();
         req.data["timeout"] = to!string(milliseconds);
         req.data["typing"] = to!string(type);
-        this.request(HTTP.Method.put, endpoint, &req);
+        this.request(HTTP.Method.post, endpoint, &req);
     }
 
 ///
