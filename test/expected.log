@@ -66,12 +66,6 @@ test/_matrix/client/r0/rooms/!room:test/send/m.room.message?access_token=success
 {"body":"blah<\/html>","format":"org.matrix.custom.html","formatted_body":"<html>blah<\/html>","msgtype":"m.text"}
 test/_matrix/client/r0/login
 {"password":"","type":"m.login.password","user":"@user:test"}
-test/_matrix/client/r0/rooms/!room:test/typing/@user:test?access_token=success
-{"timeout":"100","typing":"true"}
-test/_matrix/client/r0/rooms/!room:test/typing/@user:test?access_token=success
-{"timeout":"100","typing":"false"}
-test/_matrix/client/r0/login
-{"password":"","type":"m.login.password","user":"@user:test"}
 test/_matrix/client/r0/rooms/!room:test/receipt/m.read/$test:event?access_token=success
 {}
 test/_matrix/client/r0/login
