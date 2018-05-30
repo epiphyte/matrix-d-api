@@ -1,35 +1,24 @@
-SRC=$(shell find src/ -name "*.d")
-SAMPLE=samples/common.d
-OUTPUT=bin
-NAME=matrix-d
-
-.PHONY: all
-
-FLAGS := -inline\
-	-release\
-	-O\
-	-boundscheck=off\
+SRC     := $(shell find src/ -name "*.d")
+SAMPLE  := samples/
+OUTPUT  := bin
+NAME    := matrix-d
+FLAGS   := -inline -release -O -boundscheck=off
+DMD     := dmd
+SAMPLES := public chat loginout rooms readonly gentoken
+OUTDIR  := -of$(OUTPUT)/
+TESTS   := "test/harness.d" -unittest -version=MatrixUnitTest
 
 all: clean
-	dmd $(FLAGS) -c $(SRC) -of${OUTPUT}/${NAME}.so
+	$(DMD) $(FLAGS) -c $(SRC) $(OUTDIR)$(NAME).so
 	rm -f $(OUTPUT)/*.o
 
-define sample
-dmd $(SRC) $(SAMPLE) samples/$1.d -of$(OUTPUT)/$1
-endef
+$(SAMPLES):
+	$(DMD) $(SRC) $(SAMPLE)common.d $(SAMPLE)$@.d $(OUTDIR)$@
 
-sample: clean
-	$(call sample,public)
-	$(call sample,chat)
-	$(call sample,loginout)
-	$(call sample,rooms)
-	$(call sample,readonly)
-	$(call sample,gentoken)
-
-test: unittest sample
+test: unittest $(SAMPLES)
 
 unittest:
-	dmd $(SRC) "test/harness.d" -unittest -version=MatrixUnitTest -of$(OUTPUT)/${NAME}
+	$(DMD) $(SRC) $(TESTS) $(OUTDIR)$(NAME)
 	$(OUTPUT)/$(NAME) > $(OUTPUT)/test.log
 	diff -u $(OUTPUT)/test.log test/expected.log
 
